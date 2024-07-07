@@ -19,6 +19,7 @@ export class Game extends Scene {
   private grid: Phaser.GameObjects.Text[];
   private selectedCell: { x: number; y: number };
   private keys: KeyMap;
+  private pressedKey: Phaser.Input.Keyboard.Key | null;
 
   constructor() {
     super("Game");
@@ -76,19 +77,15 @@ export class Game extends Scene {
 
     // Check for key presses
     if (this.keys.h.isDown) {
-      this.selectedCell.x = Math.max(0, this.selectedCell.x - 1);
+      this.pressKey(this.keys.h);
     } else if (this.keys.j.isDown) {
-      this.selectedCell.y = Math.min(
-        this.gridHeight - 1,
-        this.selectedCell.y + 1,
-      );
+      this.pressKey(this.keys.j);
     } else if (this.keys.k.isDown) {
-      this.selectedCell.y = Math.max(0, this.selectedCell.y - 1);
+      this.pressKey(this.keys.k);
     } else if (this.keys.l.isDown) {
-      this.selectedCell.x = Math.min(
-        this.gridWidth - 1,
-        this.selectedCell.x + 1,
-      );
+      this.pressKey(this.keys.l);
+    } else {
+      this.pressedKey = null;
     }
 
     const text =
@@ -98,5 +95,36 @@ export class Game extends Scene {
 
     text.setBackgroundColor("rgb(255,255,255)");
     text.setColor("rgb(0,0,0)");
+  }
+
+  pressKey(key: Phaser.Input.Keyboard.Key) {
+    if (this.pressedKey === key) {
+      return;
+    }
+    this.pressedKey = key;
+    this.movePlayer(key);
+  }
+
+  movePlayer(key: Phaser.Input.Keyboard.Key) {
+    switch (key.keyCode) {
+      case this.keys.h.keyCode:
+        this.selectedCell.x = Math.max(0, this.selectedCell.x - 1);
+        break;
+      case this.keys.j.keyCode:
+        this.selectedCell.y = Math.min(
+          this.gridHeight - 1,
+          this.selectedCell.y + 1,
+        );
+        break;
+      case this.keys.k.keyCode:
+        this.selectedCell.y = Math.max(0, this.selectedCell.y - 1);
+        break;
+      case this.keys.l.keyCode:
+        this.selectedCell.x = Math.min(
+          this.gridWidth - 1,
+          this.selectedCell.x + 1,
+        );
+        break;
+    }
   }
 }
