@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { LevelData } from "../LevelData";
 
 interface KeyMap {
   h: Phaser.Input.Keyboard.Key;
@@ -11,15 +12,16 @@ export class Game extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
   background: Phaser.GameObjects.Image;
   msg_text: Phaser.GameObjects.Text;
-  private gridWidth: number;
-  private gridHeight: number;
-  private cellSize: number;
-  private cellWidth: number;
-  private fontSize: string;
-  private grid: Phaser.GameObjects.Text[];
-  private selectedCell: { x: number; y: number };
-  private keys: KeyMap;
-  private pressedKey: Phaser.Input.Keyboard.Key | null;
+  gridWidth: number;
+  gridHeight: number;
+  cellSize: number;
+  cellWidth: number;
+  fontSize: string;
+  grid: Phaser.GameObjects.Text[];
+  selectedCell: { x: number; y: number };
+  keys: KeyMap;
+  pressedKey: Phaser.Input.Keyboard.Key | null;
+  levelData: LevelData;
 
   constructor() {
     super("Game");
@@ -32,6 +34,9 @@ export class Game extends Scene {
     this.selectedCell = { x: 0, y: 0 };
   }
 
+  preload() {
+    this.load.text("map", "src/maps/field.txt");
+  }
   create() {
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0x000000);
@@ -40,14 +45,10 @@ export class Game extends Scene {
     this.gridWidth = Math.floor(+this.game.config.width / this.cellWidth);
     this.gridHeight = Math.floor(+this.game.config.height / this.cellSize);
 
-    for (let y = 0; y < this.gridHeight; y++) {
-      for (let x = 0; x < this.gridWidth; x++) {
-        const char = String.fromCharCode(33 + Math.floor(Math.random() * 94)); // ASCII 33-126
-        // box characters
-        // const char = String.fromCharCode(
-        //   0x2500 + Math.floor(Math.random() * 96),
-        // );
-        // const char = String.fromCharCode(0x2588); // █
+    // Load the map
+    this.levelData = new LevelData(this.cache.text.get("map") as string);
+    this.levelData.getRows().forEach((row, y) => {
+      row.split("").forEach((char, x) => {
         const text = this.add.text(
           x * this.cellWidth,
           y * this.cellSize,
@@ -60,8 +61,8 @@ export class Game extends Scene {
           },
         );
         this.grid.push(text);
-      }
-    }
+      });
+    });
 
     this.keys = this.input.keyboard!.addKeys({
       h: Phaser.Input.Keyboard.KeyCodes.H,
@@ -72,8 +73,9 @@ export class Game extends Scene {
   }
 
   update() {
+    const mapWidth = this.levelData.width;
     const prevText =
-      this.grid[this.selectedCell.y * this.gridWidth + this.selectedCell.x];
+      this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
 
     // Check for key presses
     if (this.keys.h.isDown) {
@@ -89,7 +91,7 @@ export class Game extends Scene {
     }
 
     const text =
-      this.grid[this.selectedCell.y * this.gridWidth + this.selectedCell.x];
+      this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
     prevText.setBackgroundColor("rgb(0,0,0)");
     prevText.setColor("rgb(255,255,255)");
 
@@ -106,24 +108,21 @@ export class Game extends Scene {
   }
 
   movePlayer(key: Phaser.Input.Keyboard.Key) {
+    const mapWidth = this.levelData.width;
+    const mapHeight = this.levelData.height;
+
     switch (key.keyCode) {
       case this.keys.h.keyCode:
         this.selectedCell.x = Math.max(0, this.selectedCell.x - 1);
         break;
       case this.keys.j.keyCode:
-        this.selectedCell.y = Math.min(
-          this.gridHeight - 1,
-          this.selectedCell.y + 1,
-        );
+        this.selectedCell.y = Math.min(mapHeight - 1, this.selectedCell.y + 1);
         break;
       case this.keys.k.keyCode:
         this.selectedCell.y = Math.max(0, this.selectedCell.y - 1);
         break;
       case this.keys.l.keyCode:
-        this.selectedCell.x = Math.min(
-          this.gridWidth - 1,
-          this.selectedCell.x + 1,
-        );
+        this.selectedCell.x = Math.min(mapWidth - 1, this.selectedCell.x + 1);
         break;
     }
   }
