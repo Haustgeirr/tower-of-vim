@@ -36,7 +36,6 @@ export class LevelData {
 
     const width = rows[0].length;
     for (let i = 1; i < rows.length; i++) {
-      console.log(rows[i].length);
       if (rows[i].length !== width) {
         return false;
       }

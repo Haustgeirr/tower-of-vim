@@ -1,5 +1,6 @@
 import { Scene } from "phaser";
 import { LevelData } from "../LevelData";
+import { TileChar, TileData } from "../TileData";
 
 interface KeyMap {
   h: Phaser.Input.Keyboard.Key;
@@ -17,7 +18,7 @@ export class Game extends Scene {
   cellSize: number;
   cellWidth: number;
   fontSize: string;
-  grid: Phaser.GameObjects.Text[];
+  grid: TileData[];
   selectedCell: { x: number; y: number };
   keys: KeyMap;
   pressedKey: Phaser.Input.Keyboard.Key | null;
@@ -37,6 +38,7 @@ export class Game extends Scene {
   preload() {
     this.load.text("map", "src/maps/field.txt");
   }
+
   create() {
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0x000000);
@@ -49,17 +51,23 @@ export class Game extends Scene {
     this.levelData = new LevelData(this.cache.text.get("map") as string);
     this.levelData.getRows().forEach((row, y) => {
       row.split("").forEach((char, x) => {
-        const text = this.add.text(
+        const text = new TileData(
+          char as TileChar,
+          this,
           x * this.cellWidth,
           y * this.cellSize,
-          char,
-          {
-            fontFamily: "Input Mono",
-            fontSize: this.fontSize,
-            color: "rgb(255,255,255)",
-            fixedWidth: this.cellWidth,
-          },
         );
+        // const text = this.add.text(
+        //   x * this.cellWidth,
+        //   y * this.cellSize,
+        //   char,
+        //   {
+        //     fontFamily: "Input Mono",
+        //     fontSize: this.fontSize,
+        //     color: "rgb(255,255,255)",
+        //     fixedWidth: this.cellWidth,
+        //   },
+        // );
         this.grid.push(text);
       });
     });
@@ -92,11 +100,9 @@ export class Game extends Scene {
 
     const text =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
-    prevText.setBackgroundColor("rgb(0,0,0)");
-    prevText.setColor("rgb(255,255,255)");
+    prevText.unhighlight();
 
-    text.setBackgroundColor("rgb(255,255,255)");
-    text.setColor("rgb(0,0,0)");
+    text.highlight();
   }
 
   pressKey(key: Phaser.Input.Keyboard.Key) {
