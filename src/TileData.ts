@@ -1,33 +1,25 @@
 export type TileChar = "." | ":";
 
 export class TileData {
+  scene: Phaser.Scene;
   char: TileChar;
   text: Phaser.GameObjects.Text;
-  tileType: any;
-  tileBackgroundColour: string;
-  tileForegroundColour: string;
+  type: any;
+  backgroundColour: string;
+  foregroundColour: string;
   walkable: boolean;
 
   constructor(tileChar: TileChar, scene: Phaser.Scene, x: number, y: number) {
     this.char = tileChar;
+    this.scene = scene;
 
-    switch (tileChar) {
-      case ".":
-      case ":":
-        this.tileType = "grass";
-        this.tileBackgroundColour = "#14300C";
-        this.tileForegroundColour = "#285E1B";
-        this.walkable = true;
-        break;
-      default:
-        throw new Error(`Invalid tile character: ${tileChar}`);
-    }
+    this.setTileData(tileChar);
 
     this.text = scene.add.text(x, y, this.char, {
       fontFamily: "Input Mono",
       fontSize: "42px",
-      color: this.tileForegroundColour,
-      backgroundColor: this.tileBackgroundColour,
+      color: this.foregroundColour,
+      backgroundColor: this.backgroundColour,
     });
   }
 
@@ -37,7 +29,52 @@ export class TileData {
   }
 
   public unhighlight() {
-    this.text.setBackgroundColor(this.tileBackgroundColour);
-    this.text.setColor(this.tileForegroundColour);
+    this.text.setBackgroundColor(this.backgroundColour);
+    this.text.setColor(this.foregroundColour);
+  }
+
+  public changeTile(tileChar: TileChar) {
+    this.setTileData(tileChar);
+
+    this.text.destroy();
+    this.text = this.scene.add.text(this.text.x, this.text.y, this.char, {
+      fontFamily: "Input Mono",
+      fontSize: "42px",
+      color: this.foregroundColour,
+      backgroundColor: this.backgroundColour,
+    });
+  }
+
+  getTileData(tileChar: TileChar) {
+    const tileData = {
+      type: "",
+      backgroundColour: "",
+      foregroundColour: "",
+      walkable: false,
+    };
+
+    switch (tileChar) {
+      case ".":
+      case ":":
+        tileData.type = "grass";
+        tileData.backgroundColour = "#14300C";
+        tileData.foregroundColour = "#285E1B";
+        tileData.walkable = true;
+        break;
+      default:
+        throw new Error(`Invalid tile character: ${tileChar}`);
+    }
+
+    return tileData;
+  }
+
+  setTileData(tileChar: TileChar) {
+    const tileData = this.getTileData(tileChar);
+
+    this.char = tileChar;
+    this.type = tileData.type;
+    this.backgroundColour = tileData.backgroundColour;
+    this.foregroundColour = tileData.foregroundColour;
+    this.walkable = tileData.walkable;
   }
 }

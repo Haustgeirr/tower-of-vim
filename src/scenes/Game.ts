@@ -2,11 +2,19 @@ import { Scene } from "phaser";
 import { LevelData } from "../LevelData";
 import { TileChar, TileData } from "../TileData";
 
+enum vimMode {
+  NORMAL,
+  INSERT,
+  VISUAL,
+}
+
 interface KeyMap {
   h: Phaser.Input.Keyboard.Key;
   j: Phaser.Input.Keyboard.Key;
   k: Phaser.Input.Keyboard.Key;
+  i: Phaser.Input.Keyboard.Key;
   l: Phaser.Input.Keyboard.Key;
+  esc: Phaser.Input.Keyboard.Key;
 }
 
 export class Game extends Scene {
@@ -23,6 +31,7 @@ export class Game extends Scene {
   keys: KeyMap;
   pressedKey: Phaser.Input.Keyboard.Key | null;
   levelData: LevelData;
+  mode: vimMode;
 
   constructor() {
     super("Game");
@@ -33,6 +42,7 @@ export class Game extends Scene {
     this.fontSize = `${this.cellSize - 6}px`;
     this.grid = [];
     this.selectedCell = { x: 0, y: 0 };
+    this.mode = vimMode.NORMAL;
   }
 
   preload() {
@@ -57,17 +67,7 @@ export class Game extends Scene {
           x * this.cellWidth,
           y * this.cellSize,
         );
-        // const text = this.add.text(
-        //   x * this.cellWidth,
-        //   y * this.cellSize,
-        //   char,
-        //   {
-        //     fontFamily: "Input Mono",
-        //     fontSize: this.fontSize,
-        //     color: "rgb(255,255,255)",
-        //     fixedWidth: this.cellWidth,
-        //   },
-        // );
+
         this.grid.push(text);
       });
     });
@@ -77,6 +77,8 @@ export class Game extends Scene {
       j: Phaser.Input.Keyboard.KeyCodes.J,
       k: Phaser.Input.Keyboard.KeyCodes.K,
       l: Phaser.Input.Keyboard.KeyCodes.L,
+      i: Phaser.Input.Keyboard.KeyCodes.I,
+      esc: Phaser.Input.Keyboard.KeyCodes.ESC,
     }) as KeyMap;
   }
 
@@ -87,13 +89,34 @@ export class Game extends Scene {
 
     // Check for key presses
     if (this.keys.h.isDown) {
-      this.pressKey(this.keys.h);
+      if (this.mode === vimMode.NORMAL) {
+        this.pressKey(this.keys.h);
+      }
+      if (this.mode === vimMode.INSERT) {
+        this.grid[
+          this.selectedCell.y * mapWidth + this.selectedCell.x
+        ].changeTile(":");
+      }
     } else if (this.keys.j.isDown) {
-      this.pressKey(this.keys.j);
+      if (this.mode === vimMode.NORMAL) {
+        this.pressKey(this.keys.j);
+      }
     } else if (this.keys.k.isDown) {
-      this.pressKey(this.keys.k);
+      if (this.mode === vimMode.NORMAL) {
+        this.pressKey(this.keys.k);
+      }
     } else if (this.keys.l.isDown) {
-      this.pressKey(this.keys.l);
+      if (this.mode === vimMode.NORMAL) {
+        this.pressKey(this.keys.l);
+      }
+    } else if (this.keys.i.isDown) {
+      if (this.mode === vimMode.NORMAL) {
+        this.mode = vimMode.INSERT;
+      }
+    } else if (this.keys.esc.isDown) {
+      if (this.mode !== vimMode.NORMAL) {
+        this.mode = vimMode.NORMAL;
+      }
     } else {
       this.pressedKey = null;
     }
