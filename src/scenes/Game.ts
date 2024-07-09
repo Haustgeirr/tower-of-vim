@@ -59,13 +59,17 @@ export class Game extends Scene {
 
     // Load the map
     this.levelData = new LevelData(this.cache.text.get("map") as string);
+
+    const xOffset = Math.floor((this.gridWidth - this.levelData.width) / 2);
+    const yOffset = Math.floor((this.gridHeight - this.levelData.height) / 2);
+
     this.levelData.getRows().forEach((row, y) => {
       row.split("").forEach((char, x) => {
         const text = new TileData(
           char as TileChar,
           this,
-          x * this.cellWidth,
-          y * this.cellSize,
+          xOffset * this.cellWidth + x * this.cellWidth,
+          yOffset * this.cellSize + y * this.cellSize,
         );
 
         this.grid.push(text);
@@ -140,19 +144,27 @@ export class Game extends Scene {
     const mapWidth = this.levelData.width;
     const mapHeight = this.levelData.height;
 
+    let nextCell = { x: this.selectedCell.x, y: this.selectedCell.y };
+
     switch (key.keyCode) {
       case this.keys.h.keyCode:
-        this.selectedCell.x = Math.max(0, this.selectedCell.x - 1);
+        nextCell.x = Math.max(0, this.selectedCell.x - 1);
         break;
       case this.keys.j.keyCode:
-        this.selectedCell.y = Math.min(mapHeight - 1, this.selectedCell.y + 1);
+        nextCell.y = Math.min(mapHeight - 1, this.selectedCell.y + 1);
         break;
       case this.keys.k.keyCode:
-        this.selectedCell.y = Math.max(0, this.selectedCell.y - 1);
+        nextCell.y = Math.max(0, this.selectedCell.y - 1);
         break;
       case this.keys.l.keyCode:
-        this.selectedCell.x = Math.min(mapWidth - 1, this.selectedCell.x + 1);
+        nextCell.x = Math.min(mapWidth - 1, this.selectedCell.x + 1);
         break;
+    }
+
+    const nextTile = this.grid[nextCell.y * mapWidth + nextCell.x];
+
+    if (nextTile.walkable) {
+      this.selectedCell = nextCell;
     }
   }
 }

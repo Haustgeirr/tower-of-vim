@@ -1,4 +1,4 @@
-export type TileChar = "." | ":";
+export type TileChar = "." | ":" | "≈";
 
 export class TileData {
   scene: Phaser.Scene;
@@ -60,6 +60,12 @@ export class TileData {
         tileData.backgroundColour = "#14300C";
         tileData.foregroundColour = "#285E1B";
         tileData.walkable = true;
+        break;
+      case "≈":
+        tileData.type = "water";
+        tileData.backgroundColour = "#0C2A3A";
+        tileData.foregroundColour = "#1A4B6B";
+        tileData.walkable = false;
         break;
       default:
         throw new Error(`Invalid tile character: ${tileChar}`);
