@@ -6,6 +6,13 @@ export class Preloader extends Scene {
   }
 
   init() {
+    const element = document.createElement("style");
+    document.head.appendChild(element);
+    const sheet = element.sheet;
+    const styles =
+      '@font-face { font-family: "IBMVGA8"; src: url("public/assets/font/Web437_IBM_VGA_8x16.woff") format("woff"); }';
+    sheet!.insertRule(styles, 0);
+
     //  We loaded this image in our Boot Scene, so we can display it here
     this.add.image(512, 384, "background");
 
@@ -23,9 +30,13 @@ export class Preloader extends Scene {
   }
 
   preload() {
-    //  Load the assets for the game - Replace with your own assets
-    this.load.setPath("assets");
+    this.load.script(
+      "webfont",
+      "https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js",
+    );
 
+    //  Load the assets for the game
+    this.load.setPath("assets");
     this.load.image("logo", "logo.png");
   }
 
@@ -34,6 +45,27 @@ export class Preloader extends Scene {
     //  For example, you can define global animations here, so we can use them in other scenes.
 
     //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-    this.scene.start("Game");
+    const _this = this;
+
+    const loadFonts = (families: string[]): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        // @ts-ignore: ignore WebFont undefined error
+        WebFont.load({
+          custom: {
+            families: families,
+          },
+          active: resolve,
+          inactive: reject,
+        });
+      });
+    };
+
+    loadFonts(["IBMVGA8"])
+      .then(() => {
+        _this.scene.start("Game"); // Start the main game scene
+      })
+      .catch((err) => {
+        console.error("Error loading fonts", err);
+      });
   }
 }

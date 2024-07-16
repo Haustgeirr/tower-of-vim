@@ -16,7 +16,7 @@ export class TileData {
     this.setTileData(tileChar);
 
     this.text = scene.add.text(x, y, this.char, {
-      fontFamily: "Input Mono",
+      fontFamily: "IBMVGA8",
       fontSize: "42px",
       color: this.foregroundColour,
       backgroundColor: this.backgroundColour,
@@ -38,7 +38,7 @@ export class TileData {
 
     this.text.destroy();
     this.text = this.scene.add.text(this.text.x, this.text.y, this.char, {
-      fontFamily: "Input Mono",
+      fontFamily: "IBMVGA8",
       fontSize: "42px",
       color: this.foregroundColour,
       backgroundColor: this.backgroundColour,

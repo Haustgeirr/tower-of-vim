@@ -45,63 +45,13 @@ export class Game extends Scene {
     this.mode = vimMode.NORMAL;
   }
 
-  init() {
-    const element = document.createElement("style");
-    document.head.appendChild(element);
-    const sheet = element.sheet;
-    const styles =
-      '@font-face { font-family: "IBMVGA8"; src: url("public/assets/font/Web437_IBM_VGA_8x16.woff") format("woff"); }';
-    sheet!.insertRule(styles, 0);
-    console.log(sheet);
-  }
-
   preload() {
     this.load.text("map", "src/maps/field.txt");
-    this.load.script(
-      "webfont",
-      "https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js",
-    );
   }
 
   create() {
-    const _this = this;
-    WebFont.load({
-      custom: {
-        families: ["IBMVGA8", "Caroni"],
-      },
-      active: function () {
-        console.log("fonts loaded");
-        console.log(this);
-        _this.add
-          .text(32, 32, "The face of the\nmoon was in\nshadow.", {
-            fontFamily: "IBMVGA8",
-            fontSize: 80,
-            color: "#ff0000",
-          })
-          .setShadow(2, 2, "#333333", 2, false, true);
-
-        _this.add.text(
-          150,
-          350,
-          "Waves flung themselves\nat the blue evening.",
-          {
-            fontFamily: "IBMVGA8",
-            fontSize: 64,
-            color: "#5656ee",
-          },
-        );
-      },
-    });
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0x000000);
-
-    // this.add
-    //   .text(32, 32, "The face of the\nmoon was in\nshadow.", {
-    //     fontFamily: "IBMVGA8",
-    //     fontSize: 80,
-    //     color: "#ff0000",
-    //   })
-    //   .setShadow(2, 2, "#333333", 2, false, true);
 
     // Initialize the grid with random characters
     this.gridWidth = Math.floor(+this.game.config.width / this.cellWidth);
