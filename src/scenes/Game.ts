@@ -102,24 +102,32 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.h);
       }
+      if (this.mode === vimMode.VISUAL) {
+        this.pressKey(this.keys.h);
+        this.selectedRange.end = {
+          x: this.selectedCell.x,
+          y: this.selectedCell.y,
+        };
+      }
       if (this.mode === vimMode.INSERT) {
         this.grid[
           this.selectedCell.y * mapWidth + this.selectedCell.x
         ].changeTile(":");
       }
     } else if (this.keys.j.isDown) {
-      if (this.mode !== vimMode.NORMAL) {
+      if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.j);
       }
     } else if (this.keys.k.isDown) {
-      if (this.mode !== vimMode.NORMAL) {
+      if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.k);
       }
     } else if (this.keys.l.isDown) {
-      if (this.mode !== vimMode.NORMAL) {
+      if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.l);
       }
       if (this.mode === vimMode.VISUAL) {
+        this.pressKey(this.keys.l);
         this.selectedRange.end = {
           x: this.selectedCell.x,
           y: this.selectedCell.y,
@@ -148,11 +156,14 @@ export class Game extends Scene {
     const text =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
     prevText.unhighlight();
-
-    if (this.mode === vimMode.VISUAL) {
+    if (this.selectedRange) {
       const visualRange = this.calculateVisualRange();
       visualRange.forEach((tile) => {
-        tile.highlight();
+        if (this.mode === vimMode.VISUAL) {
+          tile.highlight();
+        } else {
+          tile.unhighlight();
+        }
       });
     }
     text.highlight();
@@ -160,7 +171,6 @@ export class Game extends Scene {
 
   calculateVisualRange() {
     const mapWidth = this.levelData.width;
-    const mapHeight = this.levelData.height;
     const start = this.selectedRange.start;
     const end = this.selectedRange.end;
     const minX = Math.min(start.x, end.x);
