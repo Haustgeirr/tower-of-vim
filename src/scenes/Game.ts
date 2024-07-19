@@ -97,6 +97,15 @@ export class Game extends Scene {
     const prevText =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
 
+    const prevSelectedRange = this.selectedRange;
+    const newStart = prevSelectedRange
+      ? prevSelectedRange.start
+      : this.selectedCell;
+    let newSelectedRange = {
+      start: newStart,
+      end: { x: this.selectedCell.x, y: this.selectedCell.y },
+    };
+
     // Check for key presses
     if (this.keys.h.isDown) {
       if (this.mode === vimMode.NORMAL) {
@@ -104,7 +113,7 @@ export class Game extends Scene {
       }
       if (this.mode === vimMode.VISUAL) {
         this.pressKey(this.keys.h);
-        this.selectedRange.end = {
+        newSelectedRange.end = {
           x: this.selectedCell.x,
           y: this.selectedCell.y,
         };
@@ -118,9 +127,23 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.j);
       }
+      if (this.mode === vimMode.VISUAL) {
+        this.pressKey(this.keys.j);
+        newSelectedRange.end = {
+          x: this.selectedCell.x,
+          y: this.selectedCell.y,
+        };
+      }
     } else if (this.keys.k.isDown) {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.k);
+      }
+      if (this.mode === vimMode.VISUAL) {
+        this.pressKey(this.keys.k);
+        newSelectedRange.end = {
+          x: this.selectedCell.x,
+          y: this.selectedCell.y,
+        };
       }
     } else if (this.keys.l.isDown) {
       if (this.mode === vimMode.NORMAL) {
@@ -128,7 +151,7 @@ export class Game extends Scene {
       }
       if (this.mode === vimMode.VISUAL) {
         this.pressKey(this.keys.l);
-        this.selectedRange.end = {
+        newSelectedRange.end = {
           x: this.selectedCell.x,
           y: this.selectedCell.y,
         };
@@ -140,7 +163,7 @@ export class Game extends Scene {
     } else if (this.keys.v.isDown) {
       if (this.mode === vimMode.NORMAL) {
         this.mode = vimMode.VISUAL;
-        this.selectedRange = {
+        newSelectedRange = {
           start: { x: this.selectedCell.x, y: this.selectedCell.y },
           end: { x: this.selectedCell.x, y: this.selectedCell.y },
         };
@@ -156,23 +179,39 @@ export class Game extends Scene {
     const text =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
     prevText.unhighlight();
-    if (this.selectedRange) {
-      const visualRange = this.calculateVisualRange();
-      visualRange.forEach((tile) => {
+
+    if (newSelectedRange) {
+      const rangeToUnhighlight = prevSelectedRange
+        ? this.calculateVisualRange(prevSelectedRange)
+        : [];
+
+      const rangeToHighlight = this.calculateVisualRange(newSelectedRange);
+
+      rangeToUnhighlight.forEach((tile) => {
+        tile.unhighlight();
+      });
+
+      rangeToHighlight.forEach((tile) => {
         if (this.mode === vimMode.VISUAL) {
           tile.highlight();
-        } else {
-          tile.unhighlight();
         }
       });
     }
     text.highlight();
   }
 
-  calculateVisualRange() {
+  calculateVisualRange(selectedRange: {
+    start: { x: number; y: number };
+    end: { x: number; y: number };
+  }) {
     const mapWidth = this.levelData.width;
-    const start = this.selectedRange.start;
-    const end = this.selectedRange.end;
+    const start = selectedRange.start;
+    const end = selectedRange.end;
+
+    if (!start || !end) {
+      return [];
+    }
+
     const minX = Math.min(start.x, end.x);
     const maxX = Math.max(start.x, end.x);
     const minY = Math.min(start.y, end.y);

@@ -1,4 +1,4 @@
-# Tower of Vim
+# Tower of Vim [WIP]
 
 A game, made use Phaser 3 game engine, to learn vim commands.
 It's an ASCII rogue-like (and I really mean that) where the mechanics are based round vim.
