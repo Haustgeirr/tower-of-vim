@@ -197,6 +197,9 @@ export class Game extends Scene {
         }
       });
     }
+
+    this.selectedRange = newSelectedRange;
+
     text.highlight();
   }
 
