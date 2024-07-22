@@ -6,6 +6,8 @@ enum vimMode {
   NORMAL,
   INSERT,
   VISUAL,
+  VISUAL_LINE,
+  VISUAL_BLOCK,
 }
 
 interface KeyMap {
@@ -16,6 +18,8 @@ interface KeyMap {
   l: Phaser.Input.Keyboard.Key;
   v: Phaser.Input.Keyboard.Key;
   esc: Phaser.Input.Keyboard.Key;
+  ctrl: Phaser.Input.Keyboard.Key;
+  shift: Phaser.Input.Keyboard.Key;
 }
 
 export class Game extends Scene {
@@ -89,6 +93,8 @@ export class Game extends Scene {
       i: Phaser.Input.Keyboard.KeyCodes.I,
       v: Phaser.Input.Keyboard.KeyCodes.V,
       esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+      ctrl: Phaser.Input.Keyboard.KeyCodes.CTRL,
+      shift: Phaser.Input.Keyboard.KeyCodes.SHIFT,
     }) as KeyMap;
   }
 
@@ -111,7 +117,7 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.h);
       }
-      if (this.mode === vimMode.VISUAL) {
+      if (this.mode === vimMode.VISUAL_BLOCK) {
         this.pressKey(this.keys.h);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -127,7 +133,7 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.j);
       }
-      if (this.mode === vimMode.VISUAL) {
+      if (this.mode === vimMode.VISUAL_BLOCK) {
         this.pressKey(this.keys.j);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -138,7 +144,7 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.k);
       }
-      if (this.mode === vimMode.VISUAL) {
+      if (this.mode === vimMode.VISUAL_BLOCK) {
         this.pressKey(this.keys.k);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -149,7 +155,7 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.l);
       }
-      if (this.mode === vimMode.VISUAL) {
+      if (this.mode === vimMode.VISUAL_BLOCK) {
         this.pressKey(this.keys.l);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -162,11 +168,14 @@ export class Game extends Scene {
       }
     } else if (this.keys.v.isDown) {
       if (this.mode === vimMode.NORMAL) {
-        this.mode = vimMode.VISUAL;
-        newSelectedRange = {
-          start: { x: this.selectedCell.x, y: this.selectedCell.y },
-          end: { x: this.selectedCell.x, y: this.selectedCell.y },
-        };
+        if (this.keys.ctrl.isDown) {
+          this.mode = vimMode.VISUAL_BLOCK;
+
+          newSelectedRange = {
+            start: { x: this.selectedCell.x, y: this.selectedCell.y },
+            end: { x: this.selectedCell.x, y: this.selectedCell.y },
+          };
+        }
       }
     } else if (this.keys.esc.isDown) {
       if (this.mode !== vimMode.NORMAL) {
@@ -192,7 +201,7 @@ export class Game extends Scene {
       });
 
       rangeToHighlight.forEach((tile) => {
-        if (this.mode === vimMode.VISUAL) {
+        if (this.mode === vimMode.VISUAL_BLOCK) {
           tile.highlight();
         }
       });
