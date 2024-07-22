@@ -117,7 +117,10 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.h);
       }
-      if (this.mode === vimMode.VISUAL_BLOCK) {
+      if (
+        this.mode === vimMode.VISUAL_BLOCK ||
+        this.mode === vimMode.VISUAL_LINE
+      ) {
         this.pressKey(this.keys.h);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -133,7 +136,10 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.j);
       }
-      if (this.mode === vimMode.VISUAL_BLOCK) {
+      if (
+        this.mode === vimMode.VISUAL_BLOCK ||
+        this.mode === vimMode.VISUAL_LINE
+      ) {
         this.pressKey(this.keys.j);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -144,7 +150,10 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.k);
       }
-      if (this.mode === vimMode.VISUAL_BLOCK) {
+      if (
+        this.mode === vimMode.VISUAL_BLOCK ||
+        this.mode === vimMode.VISUAL_LINE
+      ) {
         this.pressKey(this.keys.k);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -155,7 +164,10 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.l);
       }
-      if (this.mode === vimMode.VISUAL_BLOCK) {
+      if (
+        this.mode === vimMode.VISUAL_BLOCK ||
+        this.mode === vimMode.VISUAL_LINE
+      ) {
         this.pressKey(this.keys.l);
         newSelectedRange.end = {
           x: this.selectedCell.x,
@@ -175,6 +187,15 @@ export class Game extends Scene {
             start: { x: this.selectedCell.x, y: this.selectedCell.y },
             end: { x: this.selectedCell.x, y: this.selectedCell.y },
           };
+        } else if (this.keys.shift.isDown) {
+          this.mode = vimMode.VISUAL_LINE;
+          // slect xmin on start range, and xmax on end rangeToUnhighlight
+          newSelectedRange = {
+            start: { x: 0, y: this.selectedCell.y },
+            end: { x: this.levelData.width - 1, y: this.selectedCell.y },
+          };
+
+          console.log(newSelectedRange);
         }
       }
     } else if (this.keys.esc.isDown) {
@@ -201,7 +222,10 @@ export class Game extends Scene {
       });
 
       rangeToHighlight.forEach((tile) => {
-        if (this.mode === vimMode.VISUAL_BLOCK) {
+        if (
+          this.mode === vimMode.VISUAL_BLOCK ||
+          this.mode === vimMode.VISUAL_LINE
+        ) {
           tile.highlight();
         }
       });
