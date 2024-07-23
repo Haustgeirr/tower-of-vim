@@ -37,6 +37,10 @@ export class Game extends Scene {
     start: { x: number; y: number };
     end: { x: number; y: number };
   };
+  prevSelectedRange: {
+    start: { x: number; y: number };
+    end: { x: number; y: number };
+  };
   keys: KeyMap;
   pressedKey: Phaser.Input.Keyboard.Key | null;
   levelData: LevelData;
@@ -103,10 +107,11 @@ export class Game extends Scene {
     const prevText =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
 
-    const prevSelectedRange = this.selectedRange;
-    const newStart = prevSelectedRange
-      ? prevSelectedRange.start
+    // const prevSelectedRange = this.selectedRange;
+    const newStart = this.prevSelectedRange
+      ? this.prevSelectedRange.start
       : this.selectedCell;
+
     let newSelectedRange = {
       start: newStart,
       end: { x: this.selectedCell.x, y: this.selectedCell.y },
@@ -122,6 +127,7 @@ export class Game extends Scene {
         this.mode === vimMode.VISUAL_LINE
       ) {
         this.pressKey(this.keys.h);
+        this.prevSelectedRange = this.selectedRange;
         newSelectedRange.end = {
           x: this.selectedCell.x,
           y: this.selectedCell.y,
@@ -141,6 +147,7 @@ export class Game extends Scene {
         this.mode === vimMode.VISUAL_LINE
       ) {
         this.pressKey(this.keys.j);
+        this.prevSelectedRange = this.selectedRange;
         newSelectedRange.end = {
           x: this.selectedCell.x,
           y: this.selectedCell.y,
@@ -150,14 +157,19 @@ export class Game extends Scene {
       if (this.mode === vimMode.NORMAL) {
         this.pressKey(this.keys.k);
       }
-      if (
-        this.mode === vimMode.VISUAL_BLOCK ||
-        this.mode === vimMode.VISUAL_LINE
-      ) {
+      if (this.mode === vimMode.VISUAL_BLOCK) {
         this.pressKey(this.keys.k);
+        this.prevSelectedRange = this.selectedRange;
         newSelectedRange.end = {
           x: this.selectedCell.x,
           y: this.selectedCell.y,
+        };
+      } else if (this.mode === vimMode.VISUAL_LINE) {
+        this.pressKey(this.keys.k);
+        this.prevSelectedRange = this.selectedRange;
+        newSelectedRange = {
+          start: { x: 0, y: this.prevSelectedRange.start.y },
+          end: { x: this.levelData.width - 1, y: this.selectedCell.y },
         };
       }
     } else if (this.keys.l.isDown) {
@@ -169,6 +181,7 @@ export class Game extends Scene {
         this.mode === vimMode.VISUAL_LINE
       ) {
         this.pressKey(this.keys.l);
+        this.prevSelectedRange = this.selectedRange;
         newSelectedRange.end = {
           x: this.selectedCell.x,
           y: this.selectedCell.y,
@@ -194,8 +207,6 @@ export class Game extends Scene {
             start: { x: 0, y: this.selectedCell.y },
             end: { x: this.levelData.width - 1, y: this.selectedCell.y },
           };
-
-          console.log(newSelectedRange);
         }
       }
     } else if (this.keys.esc.isDown) {
@@ -211,8 +222,8 @@ export class Game extends Scene {
     prevText.unhighlight();
 
     if (newSelectedRange) {
-      const rangeToUnhighlight = prevSelectedRange
-        ? this.calculateVisualRange(prevSelectedRange)
+      const rangeToUnhighlight = this.prevSelectedRange
+        ? this.calculateVisualRange(this.prevSelectedRange)
         : [];
 
       const rangeToHighlight = this.calculateVisualRange(newSelectedRange);
