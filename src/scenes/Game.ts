@@ -171,6 +171,7 @@ export class Game extends Scene {
           start: { x: 0, y: this.prevSelectedRange.start.y },
           end: { x: this.levelData.width - 1, y: this.selectedCell.y },
         };
+        console.log(newSelectedRange);
       }
     } else if (this.keys.l.isDown) {
       if (this.mode === vimMode.NORMAL) {
