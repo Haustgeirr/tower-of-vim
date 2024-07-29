@@ -22,6 +22,11 @@ interface KeyMap {
   shift: Phaser.Input.Keyboard.Key;
 }
 
+interface Range {
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+}
+
 export class Game extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
   background: Phaser.GameObjects.Image;
@@ -33,14 +38,8 @@ export class Game extends Scene {
   fontSize: string;
   grid: TileData[];
   selectedCell: { x: number; y: number };
-  selectedRange: {
-    start: { x: number; y: number };
-    end: { x: number; y: number };
-  };
-  prevSelectedRange: {
-    start: { x: number; y: number };
-    end: { x: number; y: number };
-  };
+  selectedRange: Range;
+  prevSelectedRange: Range;
   keys: KeyMap;
   pressedKey: Phaser.Input.Keyboard.Key | null;
   levelData: LevelData;
@@ -56,6 +55,8 @@ export class Game extends Scene {
     this.grid = [];
     this.selectedCell = { x: 0, y: 0 };
     this.mode = vimMode.NORMAL;
+    this.selectedRange = { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } };
+    this.prevSelectedRange = { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } };
   }
 
   preload() {
@@ -102,131 +103,113 @@ export class Game extends Scene {
     }) as KeyMap;
   }
 
+  handleNormalMode() {
+    if (this.keys.i.isDown) {
+      this.mode = vimMode.INSERT;
+    }
+
+    if (this.keys.v.isDown) {
+      if (this.keys.ctrl.isDown) {
+        this.mode = vimMode.VISUAL_BLOCK;
+      } else if (this.keys.shift.isDown) {
+        this.mode = vimMode.VISUAL_LINE;
+      } else {
+        this.mode = vimMode.VISUAL;
+        this.selectedRange = {
+          start: { x: this.selectedCell.x, y: this.selectedCell.y },
+          end: { x: this.selectedCell.x, y: this.selectedCell.y },
+        };
+      }
+    }
+
+    if (this.keys.h.isDown) {
+      this.pressKey(this.keys.h);
+    }
+
+    if (this.keys.j.isDown) {
+      this.pressKey(this.keys.j);
+    }
+
+    if (this.keys.k.isDown) {
+      this.pressKey(this.keys.k);
+    }
+
+    if (this.keys.l.isDown) {
+      console.log("l");
+      this.pressKey(this.keys.l);
+    }
+  }
+
+  handleInsertMode() {
+    if (this.keys.esc.isDown) {
+      this.mode = vimMode.NORMAL;
+    }
+  }
+
+  handleVisualMode() {
+    if (this.keys.esc.isDown) {
+      this.mode = vimMode.NORMAL;
+    }
+
+    if (this.keys.h.isDown) {
+      this.pressKey(this.keys.h);
+      this.selectedRange.end = {
+        x: this.selectedCell.x,
+        y: this.selectedCell.y,
+      };
+    }
+  }
+
+  handleVisualLineMode() {
+    if (this.keys.esc.isDown) {
+      this.mode = vimMode.NORMAL;
+    }
+  }
+
+  handleVisualBlockMode() {
+    if (this.keys.esc.isDown) {
+      this.mode = vimMode.NORMAL;
+    }
+  }
+
+  handleInput() {
+    switch (this.mode) {
+      case vimMode.NORMAL:
+        this.handleNormalMode();
+        break;
+      case vimMode.INSERT:
+        this.handleInsertMode();
+        break;
+      case vimMode.VISUAL:
+        this.handleVisualMode();
+        break;
+      case vimMode.VISUAL_LINE:
+        this.handleVisualLineMode();
+        break;
+      case vimMode.VISUAL_BLOCK:
+        this.handleVisualBlockMode();
+        break;
+    }
+  }
+
   update() {
+    this.pressedKey = null;
+
     const mapWidth = this.levelData.width;
     const prevText =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
-
-    // const prevSelectedRange = this.selectedRange;
-    const newStart = this.prevSelectedRange
-      ? this.prevSelectedRange.start
-      : this.selectedCell;
-
-    let newSelectedRange = {
-      start: newStart,
-      end: { x: this.selectedCell.x, y: this.selectedCell.y },
-    };
-
-    // Check for key presses
-    if (this.keys.h.isDown) {
-      if (this.mode === vimMode.NORMAL) {
-        this.pressKey(this.keys.h);
-      }
-      if (
-        this.mode === vimMode.VISUAL_BLOCK ||
-        this.mode === vimMode.VISUAL_LINE
-      ) {
-        this.pressKey(this.keys.h);
-        this.prevSelectedRange = this.selectedRange;
-        newSelectedRange.end = {
-          x: this.selectedCell.x,
-          y: this.selectedCell.y,
-        };
-      }
-      if (this.mode === vimMode.INSERT) {
-        this.grid[
-          this.selectedCell.y * mapWidth + this.selectedCell.x
-        ].changeTile(":");
-      }
-    } else if (this.keys.j.isDown) {
-      if (this.mode === vimMode.NORMAL) {
-        this.pressKey(this.keys.j);
-      }
-      if (
-        this.mode === vimMode.VISUAL_BLOCK ||
-        this.mode === vimMode.VISUAL_LINE
-      ) {
-        this.pressKey(this.keys.j);
-        this.prevSelectedRange = this.selectedRange;
-        newSelectedRange.end = {
-          x: this.selectedCell.x,
-          y: this.selectedCell.y,
-        };
-      }
-    } else if (this.keys.k.isDown) {
-      if (this.mode === vimMode.NORMAL) {
-        this.pressKey(this.keys.k);
-      }
-      if (this.mode === vimMode.VISUAL_BLOCK) {
-        this.pressKey(this.keys.k);
-        this.prevSelectedRange = this.selectedRange;
-        newSelectedRange.end = {
-          x: this.selectedCell.x,
-          y: this.selectedCell.y,
-        };
-      } else if (this.mode === vimMode.VISUAL_LINE) {
-        this.pressKey(this.keys.k);
-        this.prevSelectedRange = this.selectedRange;
-        newSelectedRange = {
-          start: { x: 0, y: this.prevSelectedRange.start.y },
-          end: { x: this.levelData.width - 1, y: this.selectedCell.y },
-        };
-        console.log(newSelectedRange);
-      }
-    } else if (this.keys.l.isDown) {
-      if (this.mode === vimMode.NORMAL) {
-        this.pressKey(this.keys.l);
-      }
-      if (
-        this.mode === vimMode.VISUAL_BLOCK ||
-        this.mode === vimMode.VISUAL_LINE
-      ) {
-        this.pressKey(this.keys.l);
-        this.prevSelectedRange = this.selectedRange;
-        newSelectedRange.end = {
-          x: this.selectedCell.x,
-          y: this.selectedCell.y,
-        };
-      }
-    } else if (this.keys.i.isDown) {
-      if (this.mode === vimMode.NORMAL) {
-        this.mode = vimMode.INSERT;
-      }
-    } else if (this.keys.v.isDown) {
-      if (this.mode === vimMode.NORMAL) {
-        if (this.keys.ctrl.isDown) {
-          this.mode = vimMode.VISUAL_BLOCK;
-
-          newSelectedRange = {
-            start: { x: this.selectedCell.x, y: this.selectedCell.y },
-            end: { x: this.selectedCell.x, y: this.selectedCell.y },
-          };
-        } else if (this.keys.shift.isDown) {
-          this.mode = vimMode.VISUAL_LINE;
-          // slect xmin on start range, and xmax on end rangeToUnhighlight
-          newSelectedRange = {
-            start: { x: 0, y: this.selectedCell.y },
-            end: { x: this.levelData.width - 1, y: this.selectedCell.y },
-          };
-        }
-      }
-    } else if (this.keys.esc.isDown) {
-      if (this.mode !== vimMode.NORMAL) {
-        this.mode = vimMode.NORMAL;
-      }
-    } else {
-      this.pressedKey = null;
-    }
-
     const text =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
     prevText.unhighlight();
+
+    this.handleInput();
+
+    const newSelectedRange = this.selectedRange;
 
     if (newSelectedRange) {
       const rangeToUnhighlight = this.prevSelectedRange
         ? this.calculateVisualRange(this.prevSelectedRange)
         : [];
-
       const rangeToHighlight = this.calculateVisualRange(newSelectedRange);
 
       rangeToUnhighlight.forEach((tile) => {
