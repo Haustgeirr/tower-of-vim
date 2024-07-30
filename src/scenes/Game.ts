@@ -11,15 +11,7 @@ enum vimMode {
 }
 
 interface KeyMap {
-  h: Phaser.Input.Keyboard.Key;
-  j: Phaser.Input.Keyboard.Key;
-  k: Phaser.Input.Keyboard.Key;
-  i: Phaser.Input.Keyboard.Key;
-  l: Phaser.Input.Keyboard.Key;
-  v: Phaser.Input.Keyboard.Key;
-  esc: Phaser.Input.Keyboard.Key;
-  ctrl: Phaser.Input.Keyboard.Key;
-  shift: Phaser.Input.Keyboard.Key;
+  [key: string]: Phaser.Input.Keyboard.Key;
 }
 
 interface Range {
@@ -103,106 +95,127 @@ export class Game extends Scene {
     }) as KeyMap;
   }
 
-  handleNormalMode() {
-    if (this.keys.i.isDown) {
-      this.mode = vimMode.INSERT;
+  handleNormalMode(keysDown: string[]) {
+    switch (keysDown[0]) {
+      case "i":
+        this.mode = vimMode.INSERT;
+        break;
+      case "v":
+        if (this.keys.ctrl.isDown) {
+          this.mode = vimMode.VISUAL_BLOCK;
+        } else if (this.keys.shift.isDown) {
+          this.mode = vimMode.VISUAL_LINE;
+        } else {
+          this.mode = vimMode.VISUAL;
+          this.selectedRange = {
+            start: { x: this.selectedCell.x, y: this.selectedCell.y },
+            end: { x: this.selectedCell.x, y: this.selectedCell.y },
+          };
+        }
+        break;
+      case "h":
+        this.pressKey(this.keys.h);
+        break;
+      case "j":
+        this.pressKey(this.keys.j);
+        break;
+      case "k":
+        this.pressKey(this.keys.k);
+        break;
+      case "l":
+        this.pressKey(this.keys.l);
+        break;
+      default:
+        this.pressedKey = null;
     }
+  }
 
-    if (this.keys.v.isDown) {
-      if (this.keys.ctrl.isDown) {
-        this.mode = vimMode.VISUAL_BLOCK;
-      } else if (this.keys.shift.isDown) {
-        this.mode = vimMode.VISUAL_LINE;
-      } else {
-        this.mode = vimMode.VISUAL;
-        this.selectedRange = {
-          start: { x: this.selectedCell.x, y: this.selectedCell.y },
-          end: { x: this.selectedCell.x, y: this.selectedCell.y },
+  handleInsertMode(keysDown: string[]) {
+    switch (keysDown[0]) {
+      case "esc":
+        this.mode = vimMode.NORMAL;
+        break;
+      default:
+        this.pressedKey = null;
+    }
+  }
+
+  handleVisualMode(keysDown: string[]) {
+    switch (keysDown[0]) {
+      case "esc":
+        this.mode = vimMode.NORMAL;
+        break;
+      case "h":
+        this.pressKey(this.keys.h);
+        this.selectedRange.end = {
+          x: this.selectedCell.x,
+          y: this.selectedCell.y,
         };
-      }
-    }
-
-    if (this.keys.h.isDown) {
-      this.pressKey(this.keys.h);
-    }
-
-    if (this.keys.j.isDown) {
-      this.pressKey(this.keys.j);
-    }
-
-    if (this.keys.k.isDown) {
-      this.pressKey(this.keys.k);
-    }
-
-    if (this.keys.l.isDown) {
-      console.log("l");
-      this.pressKey(this.keys.l);
+        break;
+      default:
+        this.pressedKey = null;
     }
   }
 
-  handleInsertMode() {
-    if (this.keys.esc.isDown) {
-      this.mode = vimMode.NORMAL;
+  handleVisualLineMode(keysDown: string[]) {
+    switch (keysDown[0]) {
+      case "esc":
+        this.mode = vimMode.NORMAL;
+        break;
+      default:
+        this.pressedKey = null;
     }
   }
 
-  handleVisualMode() {
-    if (this.keys.esc.isDown) {
-      this.mode = vimMode.NORMAL;
-    }
-
-    if (this.keys.h.isDown) {
-      this.pressKey(this.keys.h);
-      this.selectedRange.end = {
-        x: this.selectedCell.x,
-        y: this.selectedCell.y,
-      };
-    }
-  }
-
-  handleVisualLineMode() {
-    if (this.keys.esc.isDown) {
-      this.mode = vimMode.NORMAL;
-    }
-  }
-
-  handleVisualBlockMode() {
-    if (this.keys.esc.isDown) {
-      this.mode = vimMode.NORMAL;
+  handleVisualBlockMode(keysDown: string[]) {
+    switch (keysDown[0]) {
+      case "esc":
+        this.mode = vimMode.NORMAL;
+        break;
+      default:
+        this.pressedKey = null;
     }
   }
 
   handleInput() {
+    const keysDown = Object.keys(this.keys).filter(
+      (key) => this.keys[key].isDown,
+    );
+
+    if (keysDown.length === 0) {
+      this.pressedKey = null;
+      return;
+    }
+
     switch (this.mode) {
       case vimMode.NORMAL:
-        this.handleNormalMode();
+        this.handleNormalMode(keysDown);
         break;
       case vimMode.INSERT:
-        this.handleInsertMode();
+        this.handleInsertMode(keysDown);
         break;
       case vimMode.VISUAL:
-        this.handleVisualMode();
+        this.handleVisualMode(keysDown);
         break;
       case vimMode.VISUAL_LINE:
-        this.handleVisualLineMode();
+        this.handleVisualLineMode(keysDown);
         break;
       case vimMode.VISUAL_BLOCK:
-        this.handleVisualBlockMode();
+        this.handleVisualBlockMode(keysDown);
         break;
     }
   }
 
   update() {
-    this.pressedKey = null;
-
     const mapWidth = this.levelData.width;
     const prevText =
-      this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
-    const text =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
     prevText.unhighlight();
 
     this.handleInput();
+
+    const text =
+      this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
 
     const newSelectedRange = this.selectedRange;
 
@@ -226,6 +239,7 @@ export class Game extends Scene {
       });
     }
 
+    this.prevSelectedRange = this.selectedRange;
     this.selectedRange = newSelectedRange;
 
     text.highlight();
