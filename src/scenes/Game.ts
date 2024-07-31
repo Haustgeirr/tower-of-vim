@@ -152,6 +152,27 @@ export class Game extends Scene {
           y: this.selectedCell.y,
         };
         break;
+      case "j":
+        this.pressKey(this.keys.j);
+        this.selectedRange.end = {
+          x: this.selectedCell.x,
+          y: this.selectedCell.y,
+        };
+        break;
+      case "k":
+        this.pressKey(this.keys.k);
+        this.selectedRange.end = {
+          x: this.selectedCell.x,
+          y: this.selectedCell.y,
+        };
+        break;
+      case "l":
+        this.pressKey(this.keys.l);
+        this.selectedRange.end = {
+          x: this.selectedCell.x,
+          y: this.selectedCell.y,
+        };
+        break;
       default:
         this.pressedKey = null;
     }
@@ -187,6 +208,10 @@ export class Game extends Scene {
       return;
     }
 
+    if (this.pressedKey === this.keys[keysDown[0]]) {
+      return;
+    }
+
     switch (this.mode) {
       case vimMode.NORMAL:
         this.handleNormalMode(keysDown);
@@ -210,37 +235,31 @@ export class Game extends Scene {
     const mapWidth = this.levelData.width;
     const prevText =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
+
     prevText.unhighlight();
+
+    this.prevSelectedRange = this.selectedRange;
+
+    const rangeToUnhighlight = this.calculateVisualRange(
+      this.prevSelectedRange,
+    );
+
+    rangeToUnhighlight.forEach((tile) => {
+      tile.unhighlight();
+    });
 
     this.handleInput();
 
     const text =
       this.grid[this.selectedCell.y * mapWidth + this.selectedCell.x];
 
-    const newSelectedRange = this.selectedRange;
-
-    if (newSelectedRange) {
-      const rangeToUnhighlight = this.prevSelectedRange
-        ? this.calculateVisualRange(this.prevSelectedRange)
-        : [];
-      const rangeToHighlight = this.calculateVisualRange(newSelectedRange);
-
-      rangeToUnhighlight.forEach((tile) => {
-        tile.unhighlight();
-      });
+    if (this.mode === vimMode.VISUAL_BLOCK) {
+      const rangeToHighlight = this.calculateVisualRange(this.selectedRange);
 
       rangeToHighlight.forEach((tile) => {
-        if (
-          this.mode === vimMode.VISUAL_BLOCK ||
-          this.mode === vimMode.VISUAL_LINE
-        ) {
-          tile.highlight();
-        }
+        tile.selectHighlight();
       });
     }
-
-    this.prevSelectedRange = this.selectedRange;
-    this.selectedRange = newSelectedRange;
 
     text.highlight();
   }
@@ -271,9 +290,9 @@ export class Game extends Scene {
   }
 
   pressKey(key: Phaser.Input.Keyboard.Key) {
-    if (this.pressedKey === key) {
-      return;
-    }
+    // if (this.pressedKey === key) {
+    //   return;
+    // }
     this.pressedKey = key;
     this.movePlayer(key);
   }

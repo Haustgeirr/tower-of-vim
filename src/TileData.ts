@@ -28,6 +28,11 @@ export class TileData {
     this.text.setColor("#000000");
   }
 
+  public selectHighlight() {
+    this.text.setBackgroundColor("#FF0000");
+    this.text.setColor("#FFFFFF");
+  }
+
   public unhighlight() {
     this.text.setBackgroundColor(this.backgroundColour);
     this.text.setColor(this.foregroundColour);
